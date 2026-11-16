@@ -46,6 +46,7 @@ class RemoteService : Service() {
         )
         val STRENGTHS = arrayOf("Low", "Med", "High")
         val DURATIONS = intArrayOf(10, 30, 60)
+        private val SPACER = "⠀".repeat(42) // braille blank: shows as empty space but isn't trimmed
     }
 
     /** What one remote person has picked on their buttons. */
@@ -418,12 +419,14 @@ class RemoteService : Service() {
         val now = current
         val c = choices[id] ?: Choice()
         val status = if (now == null) {
-            "Toy is idle. Tap a mode or a strength to start."
+            "Toy is idle.\nTap a mode or a strength to start."
         } else {
-            val by = if (now.who != null) " (started by ${now.who})" else ""
-            "▶ Now: ${now.label}, ${STRENGTHS[now.strength - 1].lowercase()}, for ${now.seconds}s$by"
+            val by = if (now.who != null) "\nStarted by ${now.who}" else ""
+            "▶ ${now.label} · ${STRENGTHS[now.strength - 1]} · ${now.seconds}s$by"
         }
-        return "Toy remote\n\n$status\n\nEach tap lasts ${c.seconds} seconds."
+        // An invisible full-width line keeps the message (and so the buttons)
+        // the same width whatever the status says.
+        return "Toy remote\n\n$status\n\nEach tap lasts ${c.seconds} seconds.\n$SPACER"
     }
 
     private fun keyboard(id: Long): JSONArray {
