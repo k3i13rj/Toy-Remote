@@ -30,12 +30,15 @@ STEP 2 - Make your bot (one time only)
 
 STEP 3 - Start the app
   1. Open Toy Remote and paste the code into the first box.
-  2. "Strongest the toy is ever allowed to go" is Level 3 (full
+  2. Optional: type the name people should see on their remote,
+     e.g. a stage name. They'll see "Connected to [name]". If empty,
+     your Telegram first name is used.
+  3. "Strongest the toy is ever allowed to go" is Level 3 (full
      strength) unless you lower it.
-  3. Press START. Allow the Bluetooth ("Nearby devices") and
+  4. Press START. Allow the Bluetooth ("Nearby devices") and
      notification permissions if asked.
-  4. Telegram should turn green: "Connected as @yourbot".
-  5. Press "Test toy: buzz for 3 seconds". The toy should buzz.
+  5. Telegram should turn green: "Connected as @yourbot".
+  6. Press "Test toy: buzz for 3 seconds". The toy should buzz.
 
 STEP 4 - Link your own Telegram
   1. In Telegram, open your new bot (search its username) and press

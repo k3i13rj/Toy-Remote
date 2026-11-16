@@ -36,6 +36,7 @@ class MainActivity : Activity() {
     }
 
     private lateinit var tokenEdit: EditText
+    private lateinit var nameEdit: EditText
     private lateinit var maxSpinner: Spinner
     private lateinit var peopleBox: LinearLayout
     private lateinit var startBtn: Button
@@ -131,6 +132,17 @@ class MainActivity : Activity() {
         )
         root.addView(tv("Keep this code secret. Anyone who has it can take over your bot.", 12f, false, Color.parseColor("#A05000")))
 
+        // name shown on the remote
+        section(root, "Your name on the remote (optional)")
+        nameEdit = EditText(this).apply {
+            hint = "e.g. Anna"
+            setText(Store.shownName)
+            isSingleLine = true
+            inputType = InputType.TYPE_CLASS_TEXT
+        }
+        root.addView(nameEdit, LinearLayout.LayoutParams(MATCH, WRAP))
+        root.addView(tv("People controlling your toy see \"Connected to\" this name. Leave it empty to use your Telegram first name.", 12f))
+
         // 2. people
         section(root, "2. Who can control the toy")
         peopleBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -225,6 +237,7 @@ class MainActivity : Activity() {
     private fun refresh() {
         val running = Bus.running
         tokenEdit.isEnabled = !running
+        nameEdit.isEnabled = !running
         maxSpinner.isEnabled = !running
         setBtn(startBtn, !running)
         setBtn(stopBtn, running)
@@ -351,6 +364,7 @@ class MainActivity : Activity() {
             return
         }
         Store.setSettings(token, maxSpinner.selectedItemPosition + 1)
+        Store.setShownName(nameEdit.text.toString())
         val need = neededPermissions()
         if (need.isNotEmpty()) {
             pendingStart = true

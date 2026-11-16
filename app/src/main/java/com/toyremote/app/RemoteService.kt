@@ -185,12 +185,15 @@ class RemoteService : Service() {
                 }
             }
             // Tell remote people the buttons are off for now.
+            val who = Store.nameForRemote()
+            val offText = if (who.isNotBlank()) "🔴 Disconnected from $who\n\nThe toy remote is switched off for now."
+            else "🔴 Disconnected\n\nThe toy remote is switched off for now."
             val t = tg
             val ex = out
             if (t != null && ex != null) {
                 for ((id, msg) in panels) {
                     ex.execute {
-                        safe { t.edit(id, msg, "🔴 Disconnected\n\nThe toy remote is switched off for now.", null) }
+                        safe { t.edit(id, msg, offText, null) }
                     }
                 }
                 ex.shutdown()
@@ -447,7 +450,9 @@ class RemoteService : Service() {
         // An invisible full-width line keeps the message (and so the buttons)
         // the same width whatever the status says.
         val each = if (c.seconds == 0) "Each tap lasts until the next one." else "Each tap lasts ${c.seconds} seconds."
-        return "🟢 Connected · checked ${clock()}\n\n$status\n\n$each\n$SPACER"
+        val who = Store.nameForRemote()
+        val to = if (who.isNotBlank()) " to $who" else ""
+        return "🟢 Connected$to · checked ${clock()}\n\n$status\n\n$each\n$SPACER"
     }
 
     private fun timeText(seconds: Int) = if (seconds == 0) "until changed" else "${seconds}s"

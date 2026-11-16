@@ -57,6 +57,9 @@ object Store {
         private set
     var ownerName = ""
         private set
+    /** The name remote people see ("Connected to ..."). Blank = her Telegram first name. */
+    var shownName = ""
+        private set
 
     private val allowed = LinkedHashMap<Long, String>()
     private val pending = LinkedHashMap<Long, String>()
@@ -75,6 +78,7 @@ object Store {
         maxLevel = p.getInt("maxLevel", 3).coerceIn(1, 3)
         ownerId = p.getLong("ownerId", 0L)
         ownerName = p.getString("ownerName", "") ?: ""
+        shownName = p.getString("shownName", "") ?: ""
         decode(p.getString("allowed", ""), allowed)
         decode(p.getString("pending", ""), pending)
         p.getString("denied", "")?.split(";")?.mapNotNull { it.toLongOrNull() }?.let { denied.addAll(it) }
@@ -98,6 +102,7 @@ object Store {
             ?.putInt("maxLevel", maxLevel)
             ?.putLong("ownerId", ownerId)
             ?.putString("ownerName", ownerName)
+            ?.putString("shownName", shownName)
             ?.putString("allowed", encode(allowed))
             ?.putString("pending", encode(pending))
             ?.putString("denied", denied.joinToString(";"))
@@ -105,6 +110,15 @@ object Store {
         version++
         Bus.changed()
     }
+
+    @Synchronized fun setShownName(name: String) {
+        shownName = clean(name.trim())
+        save()
+    }
+
+    /** What remote people see, e.g. "Anna". Empty if nothing is known yet. */
+    @Synchronized fun nameForRemote(): String =
+        shownName.ifBlank { ownerName.substringBefore(" (@").substringBefore(" ").trim() }
 
     @Synchronized fun setSettings(newToken: String, newMax: Int) {
         if (newToken != token) {
