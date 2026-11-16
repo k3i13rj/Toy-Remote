@@ -201,6 +201,12 @@ class MainActivity : Activity() {
         root.addView(logText)
 
         setContentView(scroll)
+
+        if (BuildConfig.TEST_MODE) {
+            Bus.simulate = true
+            intent?.getStringExtra("test_token")?.let { tokenEdit.setText(it) }
+            if (intent?.getBooleanExtra("test_autostart", false) == true && !Bus.running) startPressed()
+        }
     }
 
     override fun onResume() {

@@ -48,6 +48,7 @@ class Broadcaster(ctx: Context) {
     private var callback: AdvertiseCallback? = null
 
     fun problem(): String? {
+        if (Bus.simulate) return null
         val a = adapter ?: return "This phone doesn't have Bluetooth."
         if (!a.isEnabled) return "Bluetooth is turned off. Turn it on and press START again."
         if (a.bluetoothLeAdvertiser == null) {
@@ -58,6 +59,17 @@ class Broadcaster(ctx: Context) {
 
     @SuppressLint("MissingPermission")
     fun send(payload: ByteArray) {
+        if (Bus.simulate) {
+            Bus.ble = "Simulated"
+            Bus.changed()
+            val what = when {
+                payload.contentEquals(LoveSpouse.STOP) -> "stop"
+                else -> LoveSpouse.LEVELS.indexOfFirst { it.contentEquals(payload) }
+                    .let { if (it >= 0) "level ${it + 1}" else "built-in mode" }
+            }
+            android.util.Log.i("ToyRemote", "Simulated toy: $what")
+            return
+        }
         stop()
         try {
             Thread.sleep(120)
@@ -107,6 +119,7 @@ class Broadcaster(ctx: Context) {
 
     @SuppressLint("MissingPermission")
     fun stop() {
+        if (Bus.simulate) return
         try {
             callback?.let { advertiser?.stopAdvertising(it) }
         } catch (ignored: Exception) {

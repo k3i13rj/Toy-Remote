@@ -13,6 +13,12 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "0.1"
+        // Test builds (gradle -PtestMode=true) simulate the toy so the
+        // Telegram side can be tried on a virtual phone. Normal builds don't.
+        buildConfigField("boolean", "TEST_MODE", (project.findProperty("testMode") == "true").toString())
+    }
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {

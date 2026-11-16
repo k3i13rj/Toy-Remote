@@ -22,6 +22,8 @@ object Bus {
     @Volatile var ble = "Not started"
     @Volatile var lastPress = "None yet"
     @Volatile var botName = ""
+    /** True only in test builds: the toy is simulated instead of using Bluetooth. */
+    @Volatile var simulate = false
 
     fun snapshotLog(): String = synchronized(lines) { lines.joinToString("\n") }
 
@@ -31,6 +33,7 @@ object Bus {
             lines.add(0, "$stamp  $msg")
             while (lines.size > 100) lines.removeAt(lines.size - 1)
         }
+        android.util.Log.i("ToyRemote", msg)
         changed()
     }
 
