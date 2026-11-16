@@ -69,8 +69,12 @@ class Telegram(private val token: String) {
     }
 
     companion object {
-        fun button(label: String, data: String): JSONObject =
-            JSONObject().put("text", label).put("callback_data", data)
+        /** style: null (plain), "primary" (blue), "success" (green) or "danger" (red). */
+        fun button(label: String, data: String, style: String? = null): JSONObject {
+            val b = JSONObject().put("text", label).put("callback_data", data)
+            if (style != null) b.put("style", style)
+            return b
+        }
 
         fun displayName(from: JSONObject): String {
             val first = from.optString("first_name", "")

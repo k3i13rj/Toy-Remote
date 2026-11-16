@@ -454,28 +454,30 @@ class RemoteService : Service() {
 
     private fun keyboard(id: Long): JSONArray {
         val c = choices[id] ?: Choice()
+        val now = current
+        val activeMode = now?.label?.removePrefix("Mode ")?.toIntOrNull()
         val kb = JSONArray()
         for (r in 0 until 3) {
             val row = JSONArray()
             for (col in 0 until 3) {
                 val n = r * 3 + col + 1
-                row.put(Telegram.button(MODE_LABELS[n - 1], "m:$n"))
+                row.put(Telegram.button(MODE_LABELS[n - 1], "m:$n", if (n == activeMode) "primary" else null))
             }
             kb.put(row)
         }
         val strength = JSONArray()
         for (i in 1..3) {
             val mark = if (c.strength == i) "✓ " else ""
-            strength.put(Telegram.button(mark + STRENGTHS[i - 1], "s:$i"))
+            strength.put(Telegram.button(mark + STRENGTHS[i - 1], "s:$i", if (c.strength == i) "primary" else null))
         }
         kb.put(strength)
         val time = JSONArray()
         for (d in DURATIONS) {
             val mark = if (c.seconds == d) "✓ " else ""
-            time.put(Telegram.button(mark + (if (d == 0) "∞ Until changed" else "${d}s"), "d:$d"))
+            time.put(Telegram.button(mark + (if (d == 0) "∞ Until changed" else "${d}s"), "d:$d", if (c.seconds == d) "primary" else null))
         }
         kb.put(time)
-        kb.put(JSONArray().put(Telegram.button("⏹ Stop", "x")))
+        kb.put(JSONArray().put(Telegram.button("⏹ Stop", "x", "danger")))
         return kb
     }
 
