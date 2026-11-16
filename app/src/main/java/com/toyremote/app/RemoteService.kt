@@ -45,14 +45,16 @@ class RemoteService : Service() {
             "🎲 Mode 7", "🌀 Mode 8", "✨ Mode 9"
         )
         val STRENGTHS = arrayOf("Low", "Med", "High")
-        val DURATIONS = intArrayOf(10, 30, 60)
+        /** Seconds per tap. 0 = keep going until the next tap (up to CONTINUOUS_LIMIT). */
+        val DURATIONS = intArrayOf(30, 60, 0)
+        private const val CONTINUOUS_LIMIT = 30 * 60 // safety: stop after 30 minutes with no taps
         private val SPACER = "⠀".repeat(42) // braille blank: shows as empty space but isn't trimmed
     }
 
     /** What one remote person has picked on their buttons. */
     private class Choice {
         @Volatile var strength = 2
-        @Volatile var seconds = 30
+        @Volatile var seconds = 0
     }
 
     /** What the toy is doing right now. */
@@ -151,6 +153,15 @@ class RemoteService : Service() {
             it.acquire(12 * 60 * 60 * 1000L)
         }
         thread(isDaemon = true) { pollLoop() }
+        thread(isDaemon = true) { heartbeatLoop() }
+    }
+
+    /** Refreshes the "checked" time on everyone's buttons once a minute. */
+    private fun heartbeatLoop() {
+        while (alive) {
+            if (!pause(60_000)) return
+            refreshPanels()
+        }
     }
 
     override fun onDestroy() {
@@ -179,7 +190,7 @@ class RemoteService : Service() {
             if (t != null && ex != null) {
                 for ((id, msg) in panels) {
                     ex.execute {
-                        safe { t.edit(id, msg, "The toy remote is switched off for now.", null) }
+                        safe { t.edit(id, msg, "🔴 Disconnected\n\nThe toy remote is switched off for now.", null) }
                     }
                 }
                 ex.shutdown()
@@ -235,6 +246,7 @@ class RemoteService : Service() {
         val t = tg ?: return
         var offset = 0L
         var ready = false
+        var announced = false
         var backoff = 1000L
         while (alive) {
             try {
@@ -250,6 +262,12 @@ class RemoteService : Service() {
                         offset = old.getJSONObject(old.length() - 1).getLong("update_id") + 1
                     }
                     ready = true
+                    if (!announced) {
+                        announced = true
+                        for (id in Store.approvedIds()) {
+                            if (id != Store.ownerId) post { sendPanel(id) }
+                        }
+                    }
                     Bus.telegram = "Connected as @${Bus.botName}"
                     Bus.log("Connected to Telegram as @${Bus.botName}.")
                     Bus.changed()
@@ -393,7 +411,8 @@ class RemoteService : Service() {
                     val now = current
                     if (now != null && now.who != null) {
                         // Something is running: change its strength, keep its time.
-                        val left = ((now.endAt - System.currentTimeMillis()) / 1000).toInt().coerceAtLeast(1)
+                        val left = if (now.seconds == 0) 0
+                        else ((now.endAt - System.currentTimeMillis()) / 1000).toInt().coerceAtLeast(1)
                         startPattern(now.pattern, n, left, now.label, name)
                     } else {
                         startPattern(Patterns.STEADY, n, c.seconds, "Steady", name)
@@ -405,7 +424,7 @@ class RemoteService : Service() {
                 val n = data.substring(2).toIntOrNull()
                 if (n != null && n in DURATIONS) {
                     c.seconds = n
-                    reply = "Each tap now lasts $n seconds"
+                    reply = if (n == 0) "Each tap now lasts until the next one" else "Each tap now lasts $n seconds"
                     refreshPanels()
                 }
             }
@@ -422,12 +441,15 @@ class RemoteService : Service() {
             "Toy is idle.\nTap a mode or a strength to start."
         } else {
             val by = if (now.who != null) "\nStarted by ${now.who}" else ""
-            "▶ ${now.label} · ${STRENGTHS[now.strength - 1]} · ${now.seconds}s$by"
+            "▶ ${now.label} · ${STRENGTHS[now.strength - 1]} · ${timeText(now.seconds)}$by"
         }
         // An invisible full-width line keeps the message (and so the buttons)
         // the same width whatever the status says.
-        return "Toy remote\n\n$status\n\nEach tap lasts ${c.seconds} seconds.\n$SPACER"
+        val each = if (c.seconds == 0) "Each tap lasts until the next one." else "Each tap lasts ${c.seconds} seconds."
+        return "🟢 Connected · checked ${clock()}\n\n$status\n\n$each\n$SPACER"
     }
+
+    private fun timeText(seconds: Int) = if (seconds == 0) "until changed" else "${seconds}s"
 
     private fun keyboard(id: Long): JSONArray {
         val c = choices[id] ?: Choice()
@@ -449,7 +471,7 @@ class RemoteService : Service() {
         val time = JSONArray()
         for (d in DURATIONS) {
             val mark = if (c.seconds == d) "✓ " else ""
-            time.put(Telegram.button("$mark${d}s", "d:$d"))
+            time.put(Telegram.button(mark + (if (d == 0) "∞ Until changed" else "${d}s"), "d:$d"))
         }
         kb.put(time)
         kb.put(JSONArray().put(Telegram.button("⏹ Stop", "x")))
@@ -504,21 +526,22 @@ class RemoteService : Service() {
     private fun startPattern(p: Pattern, chosen: Int, seconds: Int, label: String, who: String?) {
         if (!alive) return
         val strength = minOf(chosen, Store.maxLevel).coerceIn(1, 3)
-        val secs = seconds.coerceIn(1, 60)
+        val secs = if (seconds <= 0) 0 else seconds.coerceIn(1, 60)
+        val millis = if (secs == 0) CONTINUOUS_LIMIT * 1000L else secs * 1000L
         val myGen: Int
         synchronized(genLock) {
             gen++
             myGen = gen
-            current = Running(p, label, strength, System.currentTimeMillis() + secs * 1000L, secs, who)
+            current = Running(p, label, strength, System.currentTimeMillis() + millis, secs, who)
         }
-        val desc = "$label, ${STRENGTHS[strength - 1].lowercase()}, ${secs}s"
+        val desc = "$label, ${STRENGTHS[strength - 1].lowercase()}, ${timeText(secs)}"
         if (who != null) {
             Bus.lastPress = "$who: $desc at ${clock()}"
             Bus.log("$who: $desc")
         }
         Bus.changed()
         refreshPanels()
-        thread(isDaemon = true) { runPattern(myGen, p, strength, secs * 1000L) }
+        thread(isDaemon = true) { runPattern(myGen, p, strength, millis) }
     }
 
     private fun runPattern(myGen: Int, p: Pattern, strength: Int, millis: Long) {
@@ -544,13 +567,16 @@ class RemoteService : Service() {
             }
         }
         // Time's up and nobody pressed anything new.
+        var wasContinuous = false
         val finished = synchronized(genLock) {
             if (gen == myGen) {
+                wasContinuous = current?.seconds == 0
                 current = null
                 true
             } else false
         }
         if (!finished) return
+        if (wasContinuous) Bus.log("Stopped: no button presses for 30 minutes.")
         refreshPanels()
         quiet(myGen)
     }
