@@ -47,6 +47,18 @@ class RemoteService : Service() {
         val STRENGTHS = arrayOf("Low", "Med", "High")
         /** Seconds per tap. 0 = keep going until the next tap (up to CONTINUOUS_LIMIT). */
         val DURATIONS = intArrayOf(30, 60, 0)
+
+        /** Choices offered to remote people for showing times in their own zone. */
+        val ZONES = arrayOf(
+            "Pacific (US)" to "America/Los_Angeles",
+            "Mountain (US)" to "America/Denver",
+            "Central (US)" to "America/Chicago",
+            "Eastern (US)" to "America/New_York",
+            "UK" to "Europe/London",
+            "Central Europe" to "Europe/Berlin",
+            "Eastern Europe" to "Europe/Athens",
+            "Sydney" to "Australia/Sydney"
+        )
         private const val CONTINUOUS_LIMIT = 30 * 60 // safety: stop after 30 minutes with no taps
         private val SPACER = "⠀".repeat(42) // braille blank: shows as empty space but isn't trimmed
     }
@@ -242,7 +254,11 @@ class RemoteService : Service() {
     }
 
     /** Time with its zone (e.g. "3:31 PM PST"), since the remote person may be elsewhere. */
-    private fun clock() = SimpleDateFormat("h:mm a z", Locale.US).format(Date())
+    private fun clock(zone: String? = null): String {
+        val f = SimpleDateFormat("h:mm a z", Locale.US)
+        if (zone != null) f.timeZone = java.util.TimeZone.getTimeZone(zone)
+        return f.format(Date())
+    }
 
     // ---- Telegram: receiving ----
 
@@ -358,6 +374,10 @@ class RemoteService : Service() {
                 stopToy("$name sent stop.")
                 return
             }
+            if (text == "/timezone" || text == "timezone") {
+                post { sendZonePicker(id) }
+                return
+            }
             post { sendPanel(id) }
             return
         }
@@ -385,7 +405,7 @@ class RemoteService : Service() {
             return
         }
         val panelMsg = cq.optJSONObject("message")?.optLong("message_id") ?: 0L
-        if (panelMsg != 0L && data != "t") panels[id] = panelMsg
+        if (panelMsg != 0L && data != "t" && !data.startsWith("z:")) panels[id] = panelMsg
         val c = choices.getOrPut(id) { Choice() }
         var reply = ""
 
@@ -424,6 +444,14 @@ class RemoteService : Service() {
                     reply = "${STRENGTHS[n - 1]} strength"
                 }
             }
+            data.startsWith("z:") -> {
+                val n = data.substring(2).toIntOrNull()
+                if (n != null && n in ZONES.indices) {
+                    Store.setZone(id, ZONES[n].second)
+                    reply = "Times now shown in ${ZONES[n].first} time"
+                    refreshPanels()
+                }
+            }
             data.startsWith("d:") -> {
                 val n = data.substring(2).toIntOrNull()
                 if (n != null && n in DURATIONS) {
@@ -452,7 +480,7 @@ class RemoteService : Service() {
         val each = if (c.seconds == 0) "Each tap lasts until the next one." else "Each tap lasts ${c.seconds} seconds."
         val who = Store.nameForRemote()
         val to = if (who.isNotBlank()) " to $who" else ""
-        return "🟢 Connected$to · checked ${clock()}\n\n$status\n\n$each\n$SPACER"
+        return "🟢 Connected$to · checked ${clock(Store.zoneFor(id))}\n\n$status\n\n$each\n$SPACER"
     }
 
     private fun timeText(seconds: Int) = if (seconds == 0) "until changed" else "${seconds}s"
@@ -498,6 +526,25 @@ class RemoteService : Service() {
         val t = tg ?: return
         safe { t.send(id, "You're approved! Here are the controls.") }
         sendPanel(id)
+        if (Store.zoneFor(id) == null) sendZonePicker(id)
+    }
+
+    /** Asks once which time zone to show times in. Send /timezone to change it later. */
+    private fun sendZonePicker(id: Long) {
+        val t = tg ?: return
+        val kb = JSONArray()
+        var row = JSONArray()
+        for ((i, z) in ZONES.withIndex()) {
+            row.put(Telegram.button(z.first, "z:$i"))
+            if (row.length() == 2) {
+                kb.put(row)
+                row = JSONArray()
+            }
+        }
+        if (row.length() > 0) kb.put(row)
+        safe {
+            t.send(id, "Which time zone are you in?\n\nTimes on your remote will use it. Send /timezone to change it later.\n$SPACER", kb)
+        }
     }
 
     /** Updates every approved person's buttons to show what the toy is doing. */

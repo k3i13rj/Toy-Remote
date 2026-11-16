@@ -55,6 +55,9 @@ STEP 5 - Let the other person in
   3. Their request appears in section 2. Tap Allow.
   4. They get a message with the buttons: Mode 1-9, Low / Med / High,
      30s / 60s / Until changed, and Stop.
+  5. They're asked once which time zone they're in, so times on their
+     remote show in their own local time. They can send /timezone
+     to change it.
   Nobody can control the toy unless you tap Allow. You can Remove
   anyone at any time, and their buttons stop working straight away.
 

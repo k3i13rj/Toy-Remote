@@ -64,6 +64,7 @@ object Store {
     private val allowed = LinkedHashMap<Long, String>()
     private val pending = LinkedHashMap<Long, String>()
     private val denied = HashSet<Long>()
+    private val zones = LinkedHashMap<Long, String>() // person id -> time zone id
 
     /** Goes up every time the people lists change, so the screen knows to redraw them. */
     @Volatile var version = 0
@@ -81,6 +82,7 @@ object Store {
         shownName = p.getString("shownName", "") ?: ""
         decode(p.getString("allowed", ""), allowed)
         decode(p.getString("pending", ""), pending)
+        decode(p.getString("zones", ""), zones)
         p.getString("denied", "")?.split(";")?.mapNotNull { it.toLongOrNull() }?.let { denied.addAll(it) }
     }
 
@@ -105,10 +107,18 @@ object Store {
             ?.putString("shownName", shownName)
             ?.putString("allowed", encode(allowed))
             ?.putString("pending", encode(pending))
+            ?.putString("zones", encode(zones))
             ?.putString("denied", denied.joinToString(";"))
             ?.apply()
         version++
         Bus.changed()
+    }
+
+    @Synchronized fun zoneFor(id: Long): String? = zones[id]
+
+    @Synchronized fun setZone(id: Long, zone: String) {
+        zones[id] = zone
+        save()
     }
 
     @Synchronized fun setShownName(name: String) {
