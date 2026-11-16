@@ -238,7 +238,8 @@ class RemoteService : Service() {
         }
     }
 
-    private fun clock() = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+    /** Time with its zone (e.g. "3:31 PM PST"), since the remote person may be elsewhere. */
+    private fun clock() = SimpleDateFormat("h:mm a z", Locale.US).format(Date())
 
     // ---- Telegram: receiving ----
 
@@ -516,7 +517,7 @@ class RemoteService : Service() {
         val kb = JSONArray().put(JSONArray().put(Telegram.button("✅ Test buzz", "t")))
         post {
             safe {
-                t.send(owner, "Test from Toy Remote. Tap the button below. If the toy buzzes, everything works.", kb)
+                t.send(owner, "Test from Toy Remote\n\nTap the button below. If the toy buzzes, everything works.\n$SPACER", kb)
             }
         }
     }
