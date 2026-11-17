@@ -458,7 +458,14 @@ class RemoteService : Service() {
                 val n = data.substring(2).toIntOrNull()
                 if (n != null && n in DURATIONS) {
                     c.seconds = n
-                    refreshPanels()
+                    val now = current
+                    if (now != null && now.who != null) {
+                        // Something is running: apply the new time to it straight away
+                        // (restarts the countdown, or makes it run until changed).
+                        startPattern(now.pattern, now.strength, n, now.label, name)
+                    } else {
+                        refreshPanels()
+                    }
                 }
             }
         }
