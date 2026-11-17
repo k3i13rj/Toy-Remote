@@ -57,6 +57,9 @@ object Store {
         private set
     var ownerName = ""
         private set
+    /** Mode 1-9 use the toy's own built-in patterns (like the official app). */
+    var builtInModes = true
+        private set
     /** The name remote people see ("Connected to ..."). Blank = her Telegram first name. */
     var shownName = ""
         private set
@@ -80,6 +83,7 @@ object Store {
         ownerId = p.getLong("ownerId", 0L)
         ownerName = p.getString("ownerName", "") ?: ""
         shownName = p.getString("shownName", "") ?: ""
+        builtInModes = p.getBoolean("builtInModes", true)
         decode(p.getString("allowed", ""), allowed)
         decode(p.getString("pending", ""), pending)
         decode(p.getString("zones", ""), zones)
@@ -105,6 +109,7 @@ object Store {
             ?.putLong("ownerId", ownerId)
             ?.putString("ownerName", ownerName)
             ?.putString("shownName", shownName)
+            ?.putBoolean("builtInModes", builtInModes)
             ?.putString("allowed", encode(allowed))
             ?.putString("pending", encode(pending))
             ?.putString("zones", encode(zones))
@@ -118,6 +123,11 @@ object Store {
 
     @Synchronized fun setZone(id: Long, zone: String) {
         zones[id] = zone
+        save()
+    }
+
+    @Synchronized fun setBuiltInModes(on: Boolean) {
+        builtInModes = on
         save()
     }
 

@@ -33,8 +33,12 @@ STEP 3 - Start the app
   2. Optional: type the name people should see on their remote,
      e.g. a stage name. They'll see "Connected to [name]". If empty,
      your Telegram first name is used.
-  3. "Strongest the toy is ever allowed to go" is Level 3 (full
-     strength) unless you lower it.
+  3. "Use the toy's built-in modes" is ticked: Mode 1-9 are the same
+     as in the Love Spouse app, each with its own fixed strength.
+     The "Strongest" limit doesn't apply to them. If a mode doesn't
+     behave like in the Love Spouse app, untick this to use patterns
+     made by Toy Remote instead (those follow the "Strongest" limit,
+     which is Level 3, full strength, unless you lower it).
   4. Press START. Allow the Bluetooth ("Nearby devices") and
      notification permissions if asked.
   5. Telegram should turn green: "Connected as @yourbot".
@@ -53,8 +57,9 @@ STEP 5 - Let the other person in
   1. Send them your bot's username (e.g. @mytoyremote2026_bot).
   2. They open it in Telegram and press Start.
   3. Their request appears in section 2. Tap Allow.
-  4. They get a message with the buttons: Mode 1-9, Low / Med / High,
-     30s / 60s / Until changed, and Stop.
+  4. They get a message with the buttons: Mode 1-9,
+     30s / 60s / Until changed, and Stop. (Low / Med / High only appear
+     if you untick "Use the toy's built-in modes".)
   5. They're asked once which time zone they're in, so times on their
      remote show in their own local time. They can send /timezone
      to change it.
@@ -62,9 +67,10 @@ STEP 5 - Let the other person in
   anyone at any time, and their buttons stop working straight away.
 
 HOW THE BUTTONS WORK (for the other person)
-  - A mode button starts that pattern at the chosen strength.
-  - Low / Med / High: if something is running, it changes the
-    strength. If nothing is running, it starts a steady buzz.
+  - A mode button starts that mode.
+  - Low / Med / High (only with built-in modes switched off): if
+    something is running, it changes the strength. If nothing is
+    running, it starts a steady buzz.
   - "Until changed" (the default) keeps a mode going until the next
     tap. 30s / 60s make each tap a timed burst instead.
   - For safety, the toy stops by itself after 30 minutes with no taps.
@@ -93,7 +99,8 @@ IF SOMETHING'S WRONG
     is on.
 
 NOTE ON THE 9 MODES
-  In this version, Mode 1-9 are patterns made by the app (pulse,
-  wave, build-up and so on). They may feel different from the modes
-  in the Love Spouse app. They can be switched to the toy's own
-  built-in modes in a later version.
+  With "Use the toy's built-in modes" ticked (the default), Mode 1-9
+  send the same commands as the Love Spouse app. Please check each one
+  feels the same as in the Love Spouse app, and that Stop stops the
+  toy. If any mode is wrong (for example Mode 1 does nothing), untick
+  the setting to use Toy Remote's own patterns instead.

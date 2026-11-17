@@ -38,6 +38,7 @@ class MainActivity : Activity() {
     private lateinit var tokenEdit: EditText
     private lateinit var nameEdit: EditText
     private lateinit var maxSpinner: Spinner
+    private lateinit var builtInBox: CheckBox
     private lateinit var peopleBox: LinearLayout
     private lateinit var startBtn: Button
     private lateinit var stopBtn: Button
@@ -157,6 +158,19 @@ class MainActivity : Activity() {
         )
         maxSpinner.setSelection((Store.maxLevel - 1).coerceIn(0, 2))
         root.addView(maxSpinner, LinearLayout.LayoutParams(MATCH, WRAP))
+        builtInBox = CheckBox(this).apply {
+            text = "Use the toy's built-in modes (same as the Love Spouse app)"
+            isChecked = Store.builtInModes
+        }
+        root.addView(builtInBox)
+        root.addView(
+            tv(
+                "Built-in modes each have their own fixed strength, so the limit above doesn't apply " +
+                    "to them, and the remote has no Low/Med/High buttons. Untick this to use patterns " +
+                    "made by this app instead, which do follow the limit.",
+                12f
+            )
+        )
 
         // buttons
         val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
@@ -239,6 +253,7 @@ class MainActivity : Activity() {
         tokenEdit.isEnabled = !running
         nameEdit.isEnabled = !running
         maxSpinner.isEnabled = !running
+        builtInBox.isEnabled = !running
         setBtn(startBtn, !running)
         setBtn(stopBtn, running)
         setBtn(panicBtn, running)
@@ -365,6 +380,7 @@ class MainActivity : Activity() {
         }
         Store.setSettings(token, maxSpinner.selectedItemPosition + 1)
         Store.setShownName(nameEdit.text.toString())
+        Store.setBuiltInModes(builtInBox.isChecked)
         val need = neededPermissions()
         if (need.isNotEmpty()) {
             pendingStart = true

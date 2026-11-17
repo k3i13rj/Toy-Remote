@@ -33,12 +33,22 @@ object LoveSpouse {
     )
 
     /**
-     * The toy's own built-in patterns (Mode 1-9 in the Love Spouse app).
-     * Their codes aren't published. Once captured from the official app,
-     * put each 3-byte command here, e.g. PREFIX + bytes(0x.., 0x.., 0x..),
-     * and that mode will use the toy's own pattern instead of the app-made one.
+     * The toy's own built-in patterns: Mode 1-9 in the official Love Spouse
+     * iPhone app, captured from its broadcasts on 2026-11-16 and converted to
+     * this format. Each has its own fixed intensity. (The app's own stop is
+     * E4 9C 6C; we keep Tip Bridge's stop sequence, which is proven on her egg.)
      */
-    val NATIVE_MODES: Array<ByteArray?> = arrayOfNulls(9)
+    val NATIVE_MODES: Array<ByteArray?> = arrayOf(
+        PREFIX + bytes(0xE5, 0x15, 0x7D), // Mode 1
+        PREFIX + bytes(0xE6, 0x8E, 0x4F), // Mode 2
+        PREFIX + bytes(0xE7, 0x07, 0x5E), // Mode 3
+        PREFIX + bytes(0xE0, 0xB8, 0x2A), // Mode 4
+        PREFIX + bytes(0xE1, 0x31, 0x3B), // Mode 5
+        PREFIX + bytes(0xE2, 0xAA, 0x09), // Mode 6
+        PREFIX + bytes(0xE3, 0x23, 0x18), // Mode 7
+        PREFIX + bytes(0xEC, 0xD4, 0xE0), // Mode 8
+        PREFIX + bytes(0xED, 0x5D, 0xF1)  // Mode 9
+    )
 }
 
 class Broadcaster(ctx: Context) {
@@ -62,10 +72,13 @@ class Broadcaster(ctx: Context) {
         if (Bus.simulate) {
             Bus.ble = "Simulated"
             Bus.changed()
+            val native = LoveSpouse.NATIVE_MODES.indexOfFirst { it != null && it.contentEquals(payload) }
+            val level = LoveSpouse.LEVELS.indexOfFirst { it.contentEquals(payload) }
             val what = when {
                 payload.contentEquals(LoveSpouse.STOP) -> "stop"
-                else -> LoveSpouse.LEVELS.indexOfFirst { it.contentEquals(payload) }
-                    .let { if (it >= 0) "level ${it + 1}" else "built-in mode" }
+                level >= 0 -> "level ${level + 1}"
+                native >= 0 -> "built-in mode ${native + 1}"
+                else -> "unknown"
             }
             android.util.Log.i("ToyRemote", "Simulated toy: $what")
             return
@@ -160,7 +173,7 @@ object Patterns {
 
     /** n = 1..9 */
     fun mode(n: Int): Pattern {
-        val code = LoveSpouse.NATIVE_MODES[n - 1]
+        val code = if (Store.builtInModes) LoveSpouse.NATIVE_MODES[n - 1] else null
         return if (code != null) Pattern(emptyList(), native = code) else MADE[n - 1]
     }
 

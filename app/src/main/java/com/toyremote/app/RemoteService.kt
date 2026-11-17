@@ -480,7 +480,8 @@ class RemoteService : Service() {
             "Toy is idle.\nTap a mode or a strength to start."
         } else {
             val by = if (now.who != null) "\nStarted by ${now.who}" else ""
-            "▶ ${now.label} · ${STRENGTHS[now.strength - 1]} · ${timeText(now.seconds)}$by"
+            val strength = if (now.pattern.native != null) "" else " · ${STRENGTHS[now.strength - 1]}"
+            "▶ ${now.label}$strength · ${timeText(now.seconds)}$by"
         }
         // An invisible full-width line keeps the message (and so the buttons)
         // the same width whatever the status says.
@@ -514,7 +515,8 @@ class RemoteService : Service() {
             val mark = if (c.strength == i) "✓ " else ""
             strength.put(Telegram.button(mark + STRENGTHS[i - 1], "s:$i", if (c.strength == i) "primary" else null))
         }
-        kb.put(strength)
+        // Built-in modes have their own fixed intensity, so no strength row then.
+        if (!Store.builtInModes) kb.put(strength)
         val time = JSONArray()
         for (d in DURATIONS) {
             val mark = if (c.seconds == d) "✓ " else ""
@@ -600,7 +602,8 @@ class RemoteService : Service() {
             myGen = gen
             current = Running(p, label, strength, System.currentTimeMillis() + millis, secs, who)
         }
-        val desc = "$label, ${STRENGTHS[strength - 1].lowercase()}, ${timeText(secs)}"
+        val desc = if (p.native != null) "$label, ${timeText(secs)}"
+        else "$label, ${STRENGTHS[strength - 1].lowercase()}, ${timeText(secs)}"
         if (who != null) {
             Bus.lastPress = "$who: $desc at ${clock()}"
             Bus.log("$who: $desc")
