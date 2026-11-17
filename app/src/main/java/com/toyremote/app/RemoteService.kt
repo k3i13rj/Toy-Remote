@@ -477,7 +477,11 @@ class RemoteService : Service() {
         }
         // An invisible full-width line keeps the message (and so the buttons)
         // the same width whatever the status says.
-        val each = if (c.seconds == 0) "Each tap lasts until the next one." else "Each tap lasts ${c.seconds} seconds."
+        var each = if (c.seconds == 0) "Each tap lasts until the next one." else "Each tap lasts ${c.seconds} seconds."
+        if (now != null && now.seconds > 0 && now.who != null) {
+            val left = ((now.endAt - System.currentTimeMillis() + 999) / 1000).coerceAtLeast(0)
+            each += " · ⏱ ${left}s left"
+        }
         val who = Store.nameForRemote()
         val to = if (who.isNotBlank()) " to $who" else ""
         return "🟢 Connected$to · checked ${clock(Store.zoneFor(id))}\n\n$status\n\n$each\n$SPACER"
@@ -597,6 +601,17 @@ class RemoteService : Service() {
         Bus.changed()
         refreshPanels()
         thread(isDaemon = true) { runPattern(myGen, p, strength, millis) }
+        if (secs > 0 && who != null) thread(isDaemon = true) { countdown(myGen, secs) }
+    }
+
+    /** Updates the panels every 5 seconds while a timed tap runs (Telegram limits faster edits). */
+    private fun countdown(myGen: Int, secs: Int) {
+        var shown = secs
+        while (shown > 5) {
+            if (!wait(myGen, 5000)) return
+            shown -= 5
+            refreshPanels()
+        }
     }
 
     private fun runPattern(myGen: Int, p: Pattern, strength: Int, millis: Long) {
