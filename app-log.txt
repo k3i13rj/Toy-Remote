@@ -1,0 +1,9 @@
+--------- beginning of main
+11-17 18:47:55.325  2380  2380 I ToyRemote: Started.
+11-17 18:47:58.146  2380  2634 I ToyRemote: Connected to Telegram as @toyremote_test_2026_bot.
+11-17 18:49:30.381  2380  2634 I ToyRemote: New request from Josh Keiler. Allow or deny it in section 2.
+11-17 18:49:33.567  2380  2380 I ToyRemote: Linked your own Telegram.
+11-17 18:49:50.451  2380  2634 I ToyRemote: Josh Keiler: 2 · Wave, until changed
+11-17 18:49:50.454  2380  6070 I ToyRemote: Simulated toy: level 3
+11-17 18:49:57.301  2380  2634 I ToyRemote: Josh Keiler: 9 · Cha-cha, until changed
+11-17 18:49:57.308  2380  6158 I ToyRemote: Simulated toy: built-in mode 9
