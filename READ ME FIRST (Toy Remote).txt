@@ -22,11 +22,15 @@ STEP 2 - Make your bot (one time only)
   1. In Telegram, search for @BotFather (it has a blue check mark)
      and open it.
   2. Send: /newbot
-  3. Give it any name, e.g. My Toy Remote.
+  3. Give it a name with your name or stage name in it, e.g.
+     Anna's Toy. People controlling your toy see this as the chat
+     name in their Telegram, so they know whose toy it is.
   4. Give it a username ending in "bot", e.g. mytoyremote2026_bot.
   5. BotFather replies with a code that looks like
      123456789:AAH4k... Press and hold it to copy.
   Keep this code SECRET - anyone with it can take over your bot.
+  Later, in @BotFather: /setname changes the bot's name, and
+  /setuserpic gives it a picture so its chat is easy to spot.
 
 STEP 3 - Start the app
   1. Open Toy Remote and paste the code into the first box.
