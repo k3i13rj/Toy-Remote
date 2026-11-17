@@ -24,6 +24,22 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      # Sign every build with the SAME key, so new versions install over old
+      # ones. Without this, each build gets a random key and Android refuses
+      # the update with "App not installed".
+      - name: Use the fixed signing key
+        env:
+          KEY_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEY_B64" ]; then
+            echo "::error::The DEBUG_KEYSTORE_B64 secret is missing. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          echo "$KEY_B64" | base64 -d > "$RUNNER_TEMP/toyremote.keystore"
+          echo "TOYREMOTE_KEYSTORE=$RUNNER_TEMP/toyremote.keystore" >> "$GITHUB_ENV"
+          echo "Signing key fingerprint:"
+          keytool -list -v -keystore "$RUNNER_TEMP/toyremote.keystore" -storepass android | grep "SHA256:"
+
       - name: Build the app
         run: gradle assembleDebug --no-daemon --stacktrace
 
