@@ -407,25 +407,21 @@ class RemoteService : Service() {
         val panelMsg = cq.optJSONObject("message")?.optLong("message_id") ?: 0L
         if (panelMsg != 0L && data != "t" && !data.startsWith("z:")) panels[id] = panelMsg
         val c = choices.getOrPut(id) { Choice() }
-        var reply = ""
 
         when {
             data == "x" -> {
                 stopToy("$name pressed Stop.")
-                reply = "Stopped"
             }
             data == "t" -> {
                 if (id == Store.ownerId) {
                     Bus.log("Telegram test reply received. Everything is connected.")
                     startPattern(Patterns.STEADY, 1, 3, "Test buzz", null)
-                    reply = "It works! The toy should buzz for 3 seconds."
                 }
             }
             data.startsWith("m:") -> {
                 val n = data.substring(2).toIntOrNull()
                 if (n != null && n in 1..9) {
                     startPattern(Patterns.mode(n), c.strength, c.seconds, "Mode $n", name)
-                    reply = "Mode $n started"
                 }
             }
             data.startsWith("s:") -> {
@@ -441,14 +437,12 @@ class RemoteService : Service() {
                     } else {
                         startPattern(Patterns.STEADY, n, c.seconds, "Steady", name)
                     }
-                    reply = "${STRENGTHS[n - 1]} strength"
                 }
             }
             data.startsWith("z:") -> {
                 val n = data.substring(2).toIntOrNull()
                 if (n != null && n in ZONES.indices) {
                     Store.setZone(id, ZONES[n].second)
-                    reply = "Times now shown in ${ZONES[n].first} time"
                     // Swap the picker for a short confirmation, without the buttons.
                     if (panelMsg != 0L) {
                         val done = "✓ Times shown in ${ZONES[n].first} time.\nSend /timezone to change it.\n$SPACER"
@@ -461,12 +455,12 @@ class RemoteService : Service() {
                 val n = data.substring(2).toIntOrNull()
                 if (n != null && n in DURATIONS) {
                     c.seconds = n
-                    reply = if (n == 0) "Each tap now lasts until the next one" else "Each tap now lasts $n seconds"
                     refreshPanels()
                 }
             }
         }
-        post { safe { t.answer(cbId, reply) } }
+        // Answer without a pop-up: the panel itself shows what changed.
+        post { safe { t.answer(cbId, "") } }
     }
 
     // ---- Telegram: sending ----
