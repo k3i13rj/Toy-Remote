@@ -449,6 +449,11 @@ class RemoteService : Service() {
                 if (n != null && n in ZONES.indices) {
                     Store.setZone(id, ZONES[n].second)
                     reply = "Times now shown in ${ZONES[n].first} time"
+                    // Swap the picker for a short confirmation, without the buttons.
+                    if (panelMsg != 0L) {
+                        val done = "✓ Times shown in ${ZONES[n].first} time.\nSend /timezone to change it.\n$SPACER"
+                        post { safe { t.edit(id, panelMsg, done, null) } }
+                    }
                     refreshPanels()
                 }
             }
@@ -543,7 +548,7 @@ class RemoteService : Service() {
         }
         if (row.length() > 0) kb.put(row)
         safe {
-            t.send(id, "Which time zone are you in?\n\nTimes on your remote will use it. Send /timezone to change it later.\n$SPACER", kb)
+            t.send(id, "Which time zone are you in?\n\nTimes on your remote will use it.\nSend /timezone to change it later.\n$SPACER", kb)
         }
     }
 
