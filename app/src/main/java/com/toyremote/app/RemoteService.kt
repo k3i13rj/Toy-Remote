@@ -46,9 +46,9 @@ class RemoteService : Service() {
         )
         /** Names of the toy's built-in modes, as in the official app, with matching emoji. */
         val BUILT_IN = arrayOf(
-            "💓" to "Heartbeat", "〰️" to "Wave", "🦘" to "Leap",
-            "🪢" to "Entwine", "🎆" to "Climax", "🌊" to "Sea wave",
-            "💃" to "Dance", "🏄" to "Surfing", "🕺" to "Cha-cha"
+            "💓" to "Heartbeat", "⚡" to "Wave", "🦘" to "Leap",
+            "🪢" to "Entwine", "💥" to "Climax", "🌊" to "Sea wave",
+            "🔥" to "Dance", "🏄" to "Surfing", "✨" to "Cha-cha"
         )
         val STRENGTHS = arrayOf("Low", "Med", "High")
         /** Seconds per tap. 0 = keep going until the next tap (up to CONTINUOUS_LIMIT). */
