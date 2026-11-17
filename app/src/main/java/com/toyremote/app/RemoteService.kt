@@ -404,6 +404,9 @@ class RemoteService : Service() {
             post { safe { t.answer(cbId, "You're not approved to control this toy.") } }
             return
         }
+        // Confirm the tap straight away (no pop-up), so Telegram's "Loading..." clears quickly.
+        // The panel itself then shows what changed.
+        post { safe { t.answer(cbId, "") } }
         val panelMsg = cq.optJSONObject("message")?.optLong("message_id") ?: 0L
         if (panelMsg != 0L && data != "t" && !data.startsWith("z:")) panels[id] = panelMsg
         val c = choices.getOrPut(id) { Choice() }
@@ -459,8 +462,6 @@ class RemoteService : Service() {
                 }
             }
         }
-        // Answer without a pop-up: the panel itself shows what changed.
-        post { safe { t.answer(cbId, "") } }
     }
 
     // ---- Telegram: sending ----
