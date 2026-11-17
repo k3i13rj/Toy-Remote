@@ -498,14 +498,15 @@ class RemoteService : Service() {
         }
         val who = Store.nameForRemote()
         val to = if (who.isNotBlank()) " to $who" else ""
-        return "🟢 Connected$to · checked ${clock(Store.zoneFor(id))}\n\n$status\n\n$each\n$SPACER"
+        val hint = if (Store.builtInModes) "\nModes get stronger from 1 to 9." else ""
+        return "🟢 Connected$to · checked ${clock(Store.zoneFor(id))}\n\n$status\n\n$each$hint\n$SPACER"
     }
 
     /** Mode n's name: the official name for built-in modes, otherwise "Mode n". */
-    private fun modeName(n: Int) = if (Store.builtInModes) BUILT_IN[n - 1].second else "Mode $n"
+    private fun modeName(n: Int) = if (Store.builtInModes) "$n · ${BUILT_IN[n - 1].second}" else "Mode $n"
 
     private fun modeButton(n: Int) =
-        if (Store.builtInModes) "${BUILT_IN[n - 1].first} ${BUILT_IN[n - 1].second}" else MODE_LABELS[n - 1]
+        if (Store.builtInModes) "$n ${BUILT_IN[n - 1].first} ${BUILT_IN[n - 1].second}" else MODE_LABELS[n - 1]
 
     private fun timeText(seconds: Int) = if (seconds == 0) "until changed" else "${seconds}s"
 
