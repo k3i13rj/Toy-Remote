@@ -44,6 +44,12 @@ class RemoteService : Service() {
             "📈 Mode 4", "💥 Mode 5", "🔥 Mode 6",
             "🎲 Mode 7", "🌀 Mode 8", "✨ Mode 9"
         )
+        /** Names of the toy's built-in modes, as in the official app, with matching emoji. */
+        val BUILT_IN = arrayOf(
+            "💓" to "Heartbeat", "〰️" to "Wave", "🦘" to "Leap",
+            "🪢" to "Entwine", "🎆" to "Climax", "🌊" to "Sea wave",
+            "💃" to "Dance", "🏄" to "Surfing", "🕺" to "Cha-cha"
+        )
         val STRENGTHS = arrayOf("Low", "Med", "High")
         /** Seconds per tap. 0 = keep going until the next tap (up to CONTINUOUS_LIMIT). */
         val DURATIONS = intArrayOf(30, 60, 0)
@@ -424,7 +430,7 @@ class RemoteService : Service() {
             data.startsWith("m:") -> {
                 val n = data.substring(2).toIntOrNull()
                 if (n != null && n in 1..9) {
-                    startPattern(Patterns.mode(n), c.strength, c.seconds, "Mode $n", name)
+                    startPattern(Patterns.mode(n), c.strength, c.seconds, modeName(n), name)
                 }
             }
             data.startsWith("s:") -> {
@@ -495,18 +501,24 @@ class RemoteService : Service() {
         return "🟢 Connected$to · checked ${clock(Store.zoneFor(id))}\n\n$status\n\n$each\n$SPACER"
     }
 
+    /** Mode n's name: the official name for built-in modes, otherwise "Mode n". */
+    private fun modeName(n: Int) = if (Store.builtInModes) BUILT_IN[n - 1].second else "Mode $n"
+
+    private fun modeButton(n: Int) =
+        if (Store.builtInModes) "${BUILT_IN[n - 1].first} ${BUILT_IN[n - 1].second}" else MODE_LABELS[n - 1]
+
     private fun timeText(seconds: Int) = if (seconds == 0) "until changed" else "${seconds}s"
 
     private fun keyboard(id: Long): JSONArray {
         val c = choices[id] ?: Choice()
         val now = current
-        val activeMode = now?.label?.removePrefix("Mode ")?.toIntOrNull()
+        val activeMode = (1..9).firstOrNull { now?.label == modeName(it) }
         val kb = JSONArray()
         for (r in 0 until 3) {
             val row = JSONArray()
             for (col in 0 until 3) {
                 val n = r * 3 + col + 1
-                row.put(Telegram.button(MODE_LABELS[n - 1], "m:$n", if (n == activeMode) "primary" else null))
+                row.put(Telegram.button(modeButton(n), "m:$n", if (n == activeMode) "primary" else null))
             }
             kb.put(row)
         }
