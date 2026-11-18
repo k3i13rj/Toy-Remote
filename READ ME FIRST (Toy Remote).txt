@@ -1,6 +1,9 @@
 TOY REMOTE FOR ANDROID - QUICK START (version 0.1, first test version)
 ====================================================================
 
+Prefer pictures? Open Setup-Guide-Android.pdf (in the same place as
+this file) for the same steps with a drawing of each screen.
+
 Toy Remote lets people you approve control your Love Spouse toy from
 Telegram, using buttons. Only YOUR phone needs this app. The other
 person just uses Telegram, on any phone (Android or iPhone).
